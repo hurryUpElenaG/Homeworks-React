@@ -66,10 +66,9 @@ export default function NewReservationForm({
 
   return (
     <div className="bg-white border border-blue-300 p-6 rounded-xl shadow-sm mb-8">
-      
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <h2 className="text-lg font-semibold text-blue-700 mb-6">
-            Add a reservation
+          Add a reservation
         </h2>
 
         {/* Guest */}
@@ -153,9 +152,8 @@ export default function NewReservationForm({
           />
 
           {errors.arrivalTime && (
-					<p className={ERROR_FIELD_CLASSES}>{errors.arrivalTime?.message}</p>
-		    )}
-
+            <p className={ERROR_FIELD_CLASSES}>{errors.arrivalTime?.message}</p>
+          )}
         </div>
 
         {/* Table */}
@@ -183,8 +181,11 @@ export default function NewReservationForm({
                 },
 
                 validate: (value) =>
-                  !reservations.find((r) => r.assignedTable === value) ||
-                  "Table already booked",
+                  !reservations.find(
+                    (reservation) =>
+                      reservation.assignedTable === value &&
+                      reservation.status !== "Cancelled",
+                  ) || "This table is already booked for the evening!",
 
                 valueAsNumber: true,
               },
@@ -197,12 +198,8 @@ export default function NewReservationForm({
         {/* Notes */}
 
         <div>
-          <label className={LABEL_CLASSES}>Notes *</label>
-          <textarea
-            rows={3}
-            className={INPUT_CLASSES}
-            {...register("notes")}
-          />
+          <label className={LABEL_CLASSES}>Notes</label>
+          <textarea rows={3} className={INPUT_CLASSES} {...register("notes")} />
         </div>
 
         <button

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 
 type NavigationProps = {
   activePage: "list" | "dashboard";
@@ -6,10 +5,6 @@ type NavigationProps = {
 };
 
 export default function Header({ activePage, setActivePage }: NavigationProps) {
-  useEffect(() => {}, []);
-
-  useEffect(() => {}, [activePage]);
-
   return (
     <header className="mb-5 rounded-xl bg-white-100 p-5 shadow-xl">
       <h1 className="text-3xl font-bold text-blue-500 text-right">Saveur</h1>
