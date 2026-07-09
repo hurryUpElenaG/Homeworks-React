@@ -1,16 +1,16 @@
 import { useForm } from "react-hook-form";
-import type { Reservation } from "../types/reservation";
+import type { CreateReservation, Reservation } from "../types/reservation";
 
 type ReservationProps = {
   reservations: Reservation[];
-  addReservation: (reservation: Reservation) => void;
+  addReservation: (reservation: CreateReservation) => Promise<Reservation>;
 };
 
 type FormValues = {
   guestName: string;
   partySize: number;
   arrivalTime: string;
-  assignedTable: number;
+  tableNumber: number;
   notes?: string;
 };
 
@@ -18,7 +18,7 @@ const DEFAULT_VALUES: FormValues = {
   guestName: "",
   partySize: 2,
   arrivalTime: "",
-  assignedTable: 4,
+  tableNumber: 4,
   notes: "",
 };
 
@@ -35,32 +35,22 @@ export default function NewReservationForm({
   reservations,
   addReservation,
 }: ReservationProps) {
+  //const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
     reset,
     watch,
-    formState: { errors, isValid },
-  } = useForm<FormValues>({
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<CreateReservation>({
     defaultValues: DEFAULT_VALUES,
     mode: "onChange",
   });
 
   const party = watch("partySize");
 
-  function onSubmit(data: FormValues) {
-    const newReservation: Reservation = {
-      id: crypto.randomUUID(),
-      guestName: data.guestName,
-      partySize: data.partySize,
-      arrivalTime: data.arrivalTime,
-      assignedTable: data.assignedTable,
-      notes: data.notes,
-      status: "Pending",
-    };
-
-    addReservation(newReservation);
-
+  async function onSubmit(data: CreateReservation) {
+    await addReservation(data);
     reset(DEFAULT_VALUES);
   }
 
@@ -165,7 +155,7 @@ export default function NewReservationForm({
             placeholder="Table number"
             className={INPUT_CLASSES}
             {...register(
-              "assignedTable",
+              "tableNumber",
 
               {
                 required: "Table required",
@@ -183,8 +173,8 @@ export default function NewReservationForm({
                 validate: (value) =>
                   !reservations.find(
                     (reservation) =>
-                      reservation.assignedTable === value &&
-                      reservation.status !== "Cancelled",
+                      reservation.tableNumber === value &&
+                      reservation.status !== "cancelled",
                   ) || "This table is already booked for the evening!",
 
                 valueAsNumber: true,
@@ -192,7 +182,7 @@ export default function NewReservationForm({
             )}
           />
 
-          <p className={ERROR_FIELD_CLASSES}>{errors.assignedTable?.message}</p>
+          <p className={ERROR_FIELD_CLASSES}>{errors.tableNumber?.message}</p>
         </div>
 
         {/* Notes */}
@@ -202,11 +192,14 @@ export default function NewReservationForm({
           <textarea rows={3} className={INPUT_CLASSES} {...register("notes")} />
         </div>
 
-        <button
-          disabled={!isValid}
-          className="bg-blue-600 text-white text-sm font-medium  px-3 py-1 rounded-xl disabled:bg-gray-300"
-        >
-          Add Reservation
+       <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg disabled:bg-gray-300"
+          >
+            {isSubmitting
+              ? "Adding..."
+              : "Add Reservation"}
         </button>
       </form>
     </div>

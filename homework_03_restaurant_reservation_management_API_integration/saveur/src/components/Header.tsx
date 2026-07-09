@@ -1,51 +1,74 @@
-
-type NavigationProps = {
-  activePage: "list" | "dashboard";
-  setActivePage: (page: "list" | "dashboard") => void;
+type HeaderProps = {
+  activePage: "list" | "form" | "dashboard";
+  setActivePage: (
+    page: "list" | "form" | "dashboard"
+  ) => void;
 };
 
-export default function Header({ activePage, setActivePage }: NavigationProps) {
+export default function Header({
+  activePage,
+  setActivePage,
+}: HeaderProps) {
   return (
-    <header className="mb-5 rounded-xl bg-white-100 p-5 shadow-xl">
-      <h1 className="text-3xl font-bold text-blue-500 text-right">Saveur</h1>
+    <header className="bg-white rounded-xl shadow-md border-b border-blue-100">
+      {/* <div className="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between"> */}
+      <div className="w-full px-8 py-5 flex items-center justify-between">
 
-      <p className="text-blue-300 mt-2 text-lg text-right">
-        Restaurant Reservation System
-      </p>
+        {/* Logo */}
 
-      <nav className="mt-8">
-        <ul className="flex gap-4">
-          <li>
-            <button
-              onClick={() => setActivePage("list")}
-              className={`text-sm font-medium px-4 py-1 rounded-xl transition-all duration-300 transform hover:scale-105
-                ${
-                  activePage === "list"
-                    ? "bg-white text-blue-700 shadow-xl"
-                    : "bg-white/20 text-blue-200 hover:bg-white/30"
-                }
-              `}
-            >
-              Reservations
-            </button>
-          </li>
+        <div>
+          <h1 className="text-3xl font-bold text-blue-700">
+            Saveur
+          </h1>
 
-          <li>
-            <button
-              onClick={() => setActivePage("dashboard")}
-              className={`text-sm font-medium px-4 py-1 rounded-xl transition-all duration-300 transform hover:scale-105
-                ${
-                  activePage === "dashboard"
-                    ? "bg-white text-blue-700 shadow-xl"
-                    : "bg-white/20 text-blue-200 hover:bg-white/30"
-                }
-              `}
-            >
-              Dashboard
-            </button>
-          </li>
-        </ul>
-      </nav>
+          <p className="text-sm text-slate-500">
+            Restaurant Reservation System
+          </p>
+        </div>
+
+        {/* Navigation */}
+
+        <nav className="flex gap-3">
+
+          <button
+            onClick={() => setActivePage("list")}
+            className={`px-5 py-2 rounded-xl text-sm font-medium transition
+              ${
+                activePage === "list"
+                  ? "bg-blue-600 text-white"
+                  : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+              }`}
+          >
+            Reservation List
+          </button>
+
+          <button
+            onClick={() => setActivePage("form")}
+            className={`px-5 py-2 rounded-xl text-sm font-medium transition
+              ${
+                activePage === "form"
+                  ? "bg-blue-600 text-white"
+                  : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+              }`}
+          >
+            Add Reservation
+          </button>
+
+          <button
+            onClick={() => setActivePage("dashboard")}
+            className={`px-5 py-2 rounded-xl text-sm font-medium transition
+              ${
+                activePage === "dashboard"
+                  ? "bg-blue-600 text-white"
+                  : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+              }`}
+          >
+            Dashboard
+          </button>
+
+        </nav>
+
+      </div>
     </header>
   );
 }

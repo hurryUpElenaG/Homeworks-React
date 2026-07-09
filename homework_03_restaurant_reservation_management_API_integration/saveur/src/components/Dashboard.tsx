@@ -1,56 +1,146 @@
 import type { Reservation } from "../types/reservation";
 
-type ReservationProps = {
+type Props = {
   reservations: Reservation[];
 };
 
-export default function Dashboard({ reservations }: ReservationProps) {
-  const confirmed = reservations.filter(
-    (reservation) => reservation.status === "Confirmed",
+export default function Dashboard({ reservations }: Props) {
+  const confirmedReservations = reservations.filter(
+    (reservation) => reservation.status === "confirmed"
   );
 
-  const totalGuests = confirmed.reduce(
+  const confirmedGuests = confirmedReservations.reduce(
     (total, reservation) => total + reservation.partySize,
-    0,
+    0
   );
 
-  const pending = reservations.filter(
-    (reservation) => reservation.status === "Pending",
+  const confirmedTables = confirmedReservations.length;
+
+  const pendingReservations = reservations.filter(
+    (reservation) => reservation.status === "pending"
   ).length;
 
-  const tables = confirmed.length;
+  const cancelledReservations = reservations.filter(
+    (reservation) => reservation.status === "cancelled"
+  ).length;
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-blue-800 mb-6">Dashboard</h2>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <h2 className="text-3xl font-bold text-blue-700 mb-8">
+        Dashboard
+      </h2>
+
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+
         {/* Guests */}
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <p className="text-gray-500">Expected Guests</p>
+        <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-blue-600">
+          <p className="text-slate-500 text-sm">
+            Confirmed Guests
+          </p>
 
-          <h3 className="text-4xl font-bold text-blue-700 mt-2">
-            {totalGuests}
+          <h3 className="text-4xl font-bold text-blue-700 mt-3">
+            {confirmedGuests}
           </h3>
+
+          <p className="text-slate-500 mt-2">
+            Expected tonight
+          </p>
         </div>
 
         {/* Tables */}
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <p className="text-gray-500">Confirmed Tables</p>
+        <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-green-600">
+          <p className="text-slate-500 text-sm">
+            Confirmed Tables
+          </p>
 
-          <h3 className="text-4xl font-bold text-blue-700 mt-2">{tables}</h3>
+          <h3 className="text-4xl font-bold text-green-700 mt-3">
+            {confirmedTables}
+          </h3>
+
+          <p className="text-slate-500 mt-2">
+            Ready to serve
+          </p>
         </div>
 
         {/* Pending */}
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <p className="text-gray-500">Pending Reservations</p>
+        <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-yellow-500">
+          <p className="text-slate-500 text-sm">
+            Pending Reservations
+          </p>
 
-          <h3 className="text-4xl font-bold text-orange-500 mt-2">{pending}</h3>
+          <h3 className="text-4xl font-bold text-yellow-600 mt-3">
+            {pendingReservations}
+          </h3>
+
+          <p className="text-slate-500 mt-2">
+            Waiting for confirmation
+          </p>
         </div>
+
+        {/* Cancelled */}
+
+        <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-red-500">
+          <p className="text-slate-500 text-sm">
+            Cancelled Reservations
+          </p>
+
+          <h3 className="text-4xl font-bold text-red-600 mt-3">
+            {cancelledReservations}
+          </h3>
+
+          <p className="text-slate-500 mt-2">
+            Cancelled today
+          </p>
+        </div>
+
       </div>
+
+      {/* Summary */}
+
+      <div className="bg-white rounded-2xl shadow-md mt-10 p-6">
+
+        <h3 className="text-xl font-semibold text-slate-800 mb-4">
+          Tonight's Summary
+        </h3>
+
+        <div className="space-y-3 text-slate-700">
+
+          <div className="flex justify-between border-b pb-2">
+            <span>Total Reservations</span>
+            <span className="font-semibold">
+              {reservations.length}
+            </span>
+          </div>
+
+          <div className="flex justify-between border-b pb-2">
+            <span>Confirmed Reservations</span>
+            <span className="font-semibold">
+              {confirmedReservations.length}
+            </span>
+          </div>
+
+          <div className="flex justify-between border-b pb-2">
+            <span>Pending Reservations</span>
+            <span className="font-semibold">
+              {pendingReservations}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Cancelled Reservations</span>
+            <span className="font-semibold">
+              {cancelledReservations}
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }

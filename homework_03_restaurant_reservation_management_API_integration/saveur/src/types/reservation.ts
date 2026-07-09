@@ -1,11 +1,26 @@
-export type ReservationStatus = "Pending" | "Confirmed" | "Cancelled";
+export type ReservationStatus = "pending" | "confirmed" | "cancelled";
 
 export type Reservation = {
-  id: string;
+  id: number;
   guestName: string;
   partySize: number;
   arrivalTime: string;
-  assignedTable: number;
+  tableNumber: number;
   status: ReservationStatus;
   notes?: string;
 };
+
+export type CreateReservation = {
+  guestName: string;
+  partySize: number;
+  arrivalTime: string;
+  tableNumber: number;
+  notes?: string;
+};
+
+
+export type UpdateReservation = Partial<CreateReservation> & {
+  status?: ReservationStatus;
+};
+
+

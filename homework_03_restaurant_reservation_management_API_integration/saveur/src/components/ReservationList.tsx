@@ -2,89 +2,141 @@ import { useState } from "react";
 import ReservationCard from "./ReservationCard";
 import type { Reservation } from "../types/reservation";
 
-type ReservationProps = {
+type Props = {
   reservations: Reservation[];
-  updateStatus: (id: string, status: "Confirmed" | "Cancelled") => void;
+  deleteReservation: (id: number) => Promise<void>;
+  confirmReservation: (id: number) => Promise<void>;
 };
 
 export default function ReservationList({
   reservations,
-  updateStatus,
-}: ReservationProps) {
-  const [filter, setFilter] = useState("All");
+  deleteReservation,
+  confirmReservation,
+}: Props) {
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
-  const filtered = reservations.filter((reservation) => {
-    const matchStatus = filter === "All" || reservation.status === filter;
-    const matchSearch = reservation.guestName
+  const filteredReservations = reservations.filter((reservation) => {
+    const matchesSearch = reservation.guestName
       .toLowerCase()
       .includes(search.toLowerCase());
 
-    return matchStatus && matchSearch;
+    const matchesFilter =
+      filter === "all" || reservation.status === filter;
+
+    return matchesSearch && matchesFilter;
   });
 
-  return (
-    <div>
-      {/* Controls */}
+  const pendingCount = reservations.filter(
+    (reservation) => reservation.status === "pending"
+  ).length;
 
-      <div className="bg-white p-5 rounded-xl shadow mb-6">
+  const confirmedCount = reservations.filter(
+    (reservation) => reservation.status === "confirmed"
+  ).length;
+
+  const cancelledCount = reservations.filter(
+    (reservation) => reservation.status === "cancelled"
+  ).length;
+
+  return (
+     <div>
+      {/* Search & Filter */}
+
+      <div className="bg-white rounded-xl shadow-md p-5 mb-6">
+
         <div className="flex gap-3 justify-end">
+
           <input
-            className="border rounded-lg px-2 py-1 text-sm"
             type="text"
-            placeholder="Search guest"
+            placeholder="Search guest..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="border border-slate-300 rounded-lg px-4 py-2 w-full lg:w-72"
           />
 
-          {["All", "Pending", "Confirmed", "Cancelled"].map((item) => {
-            const count =
-              item === "All"
-                ? reservations.length
-                : reservations.filter(
-                    (reservation) => reservation.status === item,
-                  ).length;
+          <div className="flex flex-wrap gap-2">
 
-            return (
-              <button
-                key={item}
-                onClick={() => setFilter(item)}
-                className="bg-blue-100 px-2 py-1 text-sm rounded-lg"
-              >
-                {item} ({count})
-              </button>
-            );
-          })}
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-4 py-2 rounded-lg transition
+                ${
+                  filter === "all"
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-100 text-blue-700"
+                }`}
+            >
+              All ({reservations.length})
+            </button>
+
+            <button
+              onClick={() => setFilter("pending")}
+              className={`px-4 py-2 rounded-lg transition
+                ${
+                  filter === "pending"
+                    ? "bg-yellow-500 text-white"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
+            >
+              Pending ({pendingCount})
+            </button>
+
+            <button
+              onClick={() => setFilter("confirmed")}
+              className={`px-4 py-2 rounded-lg transition
+                ${
+                  filter === "confirmed"
+                    ? "bg-green-600 text-white"
+                    : "bg-green-100 text-green-700"
+                }`}
+            >
+              Confirmed ({confirmedCount})
+            </button>
+
+            <button
+              onClick={() => setFilter("cancelled")}
+              className={`px-4 py-2 rounded-lg transition
+                ${
+                  filter === "cancelled"
+                    ? "bg-red-600 text-white"
+                    : "bg-red-100 text-red-700"
+                }`}
+            >
+              Cancelled ({cancelledCount})
+            </button>
+
+          </div>
+
         </div>
+
       </div>
 
-      {/* Cards */}
+      {/* Empty State */}
 
-      <div className="grid md:grid-cols-3 gap-5">
-        {filtered.length > 0 ? (
-          filtered.map((reservation) => (
+      {filteredReservations.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-md p-10 text-center">
+          <h2 className="text-xl font-semibold text-slate-700">
+            No reservations found
+          </h2>
+
+          <p className="text-slate-500 mt-2">
+            Try changing the search or filter.
+          </p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-3 xl:grid-cols-4 gap-5">
+
+          {filteredReservations.map((reservation) => (
             <ReservationCard
               key={reservation.id}
               reservation={reservation}
-              updateStatus={updateStatus}
+              deleteReservation={deleteReservation}
+              confirmReservation={confirmReservation}
             />
-          ))
-        ) : (
-          <div className="col-span-full rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-            <h2 className="text-lg font-semibold">No reservations found</h2>
+          ))}
 
-            <p className="mt-2 text-gray-600">
-              There are no reservations that match your current search or
-              filter.
-            </p>
-
-            <p className="mt-1 text-gray-500">
-              Try selecting another status or clear the search to see more
-              reservations.
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

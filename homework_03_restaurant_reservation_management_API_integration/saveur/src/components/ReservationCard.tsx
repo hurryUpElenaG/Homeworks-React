@@ -1,46 +1,118 @@
 import type { Reservation } from "../types/reservation";
 
-type ReservationProps = {
+type Props = {
   reservation: Reservation;
-  updateStatus: (id: string, status: "Confirmed" | "Cancelled") => void;
+  confirmReservation: (id: number) => Promise<void>;
+  deleteReservation: (id: number) => Promise<void>;
 };
 
-export default function ReservationCard({ reservation, updateStatus }: ReservationProps) {
+export default function ReservationCard({
+  reservation,
+  confirmReservation,
+  deleteReservation,
+}: Props) {
+  
+  function getStatusColor() {
+    switch (reservation.status) {
+      case "confirmed":
+        return "bg-green-100 text-green-700";
+
+      case "pending":
+        return "bg-yellow-100 text-yellow-700";
+
+      case "cancelled":
+        return "bg-red-100 text-red-700";
+
+      default:
+        return "";
+    }
+  }
+
+  function getStatusText() {
+    switch (reservation.status) {
+      case "confirmed":
+        return "Confirmed";
+
+      case "pending":
+        return "Pending";
+
+      case "cancelled":
+        return "Cancelled";
+
+      default:
+        return reservation.status;
+    }
+  }
+
   return (
-    <div className="bg-white rounded-xl shadow p-6">
+    <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 hover:shadow-xl transition">
 
-      <div className="flex justify-between">
-        <h2 className="text-l font-bold text-blue-900">{reservation.guestName}</h2>
-        <span className="bg-blue-100 text-sm font-medium  px-3 rounded">{reservation.status}</span>
+      {/* Header */}
+
+      <div className="flex justify-between items-center mb-5">
+
+        <h2 className="text-xl font-semibold text-slate-800">
+          {reservation.guestName}
+        </h2>
+
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor()}`}
+        >
+          {getStatusText()}
+        </span>
+
       </div>
 
-      <div className="mt-4">
-        <p>Guests: {reservation.partySize}</p>
-        <p>Time: {reservation.arrivalTime}</p>
-        <p>Table: {reservation.assignedTable}</p>
+      {/* Reservation Details */}
+
+      <div className="space-y-3 text-slate-600">
+
+        <p>
+          <span className="font-semibold">👥 Party Size:</span>{" "}
+          {reservation.partySize}
+        </p>
+
+        <p>
+          <span className="font-semibold">🕒 Arrival:</span>{" "}
+          {reservation.arrivalTime}
+        </p>
+
+        <p>
+          <span className="font-semibold">🪑 Table:</span>{" "}
+          {reservation.tableNumber}
+        </p>
+
+        {reservation.notes && (
+          <p>
+            <span className="font-semibold">📝 Notes:</span>{" "}
+            {reservation.notes}
+          </p>
+        )}
+
       </div>
 
-      {reservation.notes && (
-        <p className="mt-3 text-gray-500">{reservation.notes}</p>
-      )}
+      {/* Buttons */}
 
-      {reservation.status === "Pending" && (
-        <div className="flex gap-3 mt-5">
+      {reservation.status === "pending" && (
+        <div className="flex justify-end gap-3 mt-6">
+
           <button
-            onClick={() => updateStatus(reservation.id, "Confirmed")}
-            className="bg-green-400 text-white text-sm font-medium  px-3 py-1 rounded-xl"
+            onClick={() => confirmReservation(reservation.id)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
           >
             Confirm
           </button>
 
           <button
-            onClick={() => updateStatus(reservation.id, "Cancelled")}
-            className="bg-red-400 text-white text-sm font-medium  px-3 py-1 rounded-xl"
+            onClick={() => deleteReservation(reservation.id)}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
           >
             Cancel
           </button>
+
         </div>
       )}
+
     </div>
   );
 }
