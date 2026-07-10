@@ -42,9 +42,10 @@ export async function fetchReservations(
   return response.json();
 }
 
+//this is used for the dasboardReservations
 export async function fetchAllReservations(): Promise<Reservation[]> {
   try {
-    const rawResponse = await fetch(`${BASE_URL}/reservations`);
+    const rawResponse = await fetch(`${BASE_URL}/reservations/all`);
 
     if (!rawResponse.ok) {
       throw new Error("Failed to load reservations.");

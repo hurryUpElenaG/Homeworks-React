@@ -63,6 +63,14 @@ export class ReservationsService {
     };
   }
 
+  async findAllReservations(): Promise<Reservation[]> {
+    return this.reservationRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
   async findOne(id: number): Promise<Reservation> {
     const reservation = await this.reservationRepository.findOneBy({ id });
     if (!reservation) {

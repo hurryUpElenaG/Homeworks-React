@@ -36,7 +36,7 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const debouncedSearch = useDebounce(search);
-  const [dashboardReservations, setDashboardReservations] = useState<Reservation[]>([]);
+  const [allReservations, setAllReservations] = useState<Reservation[]>([]);
 
   async function loadReservations() {
     try {
@@ -66,28 +66,19 @@ export default function App() {
     loadReservations();
   }, [debouncedSearch, statusFilter, sortBy, sortOrder, page]);
 
-
-  async function loadReservationsForDashboard() {
+  //used for counting status reservations in reservationsList and Dashboard
+  async function loadAllReservations() {
     try {
-      setStatus("loading");
-
       const response = await fetchAllReservations();
-
-      setDashboardReservations(response.data);
-      setStatus("success");
+      setAllReservations(response);
     } catch (error) {
       console.error(error);
-
-      setError("Failed to load reservations.");
-      setStatus("error");
     }
   }
 
   useEffect(() => {
-  if (activePage === "dashboard") {
-    loadReservationsForDashboard();
-  }
-}, [activePage]);
+    loadAllReservations();
+  }, []);
 
   async function addReservation(
     reservation: CreateReservation,
@@ -96,6 +87,7 @@ export default function App() {
       const newReservation = await createReservation(reservation);
 
       setReservations((previous) => [...previous, newReservation]);
+      setAllReservations((previous) => [...previous, newReservation]);
 
       setActivePage("list");
 
@@ -120,6 +112,7 @@ export default function App() {
       await deleteReservation(id);
 
       await loadReservations();
+      await loadAllReservations();
     } catch (error) {
       console.error(error);
 
@@ -134,6 +127,7 @@ export default function App() {
       });
 
       await loadReservations();
+      await loadAllReservations();
     } catch (error) {
       console.error(error);
 
@@ -141,11 +135,15 @@ export default function App() {
     }
   }
 
-  async function handleUpdateReservation(id: number, data: UpdateReservation): Promise<Reservation> {
+  async function handleUpdateReservation(
+    id: number,
+    data: UpdateReservation,
+  ): Promise<Reservation> {
     try {
       const updatedReservation = await updateReservation(id, data);
 
       await loadReservations();
+      await loadAllReservations();
 
       return updatedReservation;
     } catch (error) {
@@ -179,6 +177,7 @@ export default function App() {
               {activePage === "list" && (
                 <ReservationList
                   reservations={reservations}
+                  allReservations={allReservations}
                   deleteReservation={handleDeleteReservation}
                   confirmReservation={handleConfirmReservation}
                   updateReservation={handleUpdateReservation}
@@ -205,7 +204,7 @@ export default function App() {
               )}
 
               {activePage === "dashboard" && (
-                <Dashboard dashboardReservations={dashboardReservations} />
+                <Dashboard reservations={allReservations} />
               )}
             </>
           )}

@@ -1,11 +1,11 @@
 import type { Reservation } from "../types/reservation";
 
 type Props = {
-  dashboardReservations: Reservation[];
+  reservations: Reservation[];
 };
 
-export default function Dashboard({ dashboardReservations }: Props) {
-  const confirmedReservations = dashboardReservations.filter(
+export default function Dashboard({ reservations }: Props) {
+  const confirmedReservations = reservations.filter(
     (reservation) => reservation.status === "confirmed"
   );
 
@@ -16,11 +16,11 @@ export default function Dashboard({ dashboardReservations }: Props) {
 
   const confirmedTables = confirmedReservations.length;
 
-  const pendingReservations = dashboardReservations.filter(
+  const pendingReservations = reservations.filter(
     (reservation) => reservation.status === "pending"
   ).length;
 
-  const cancelledReservations = dashboardReservations.filter(
+  const cancelledReservations = reservations.filter(
     (reservation) => reservation.status === "cancelled"
   ).length;
 
@@ -112,7 +112,7 @@ export default function Dashboard({ dashboardReservations }: Props) {
           <div className="flex justify-between border-b pb-2">
             <span>Total Reservations</span>
             <span className="font-semibold">
-              {dashboardReservations.length}
+              {reservations.length}
             </span>
           </div>
 

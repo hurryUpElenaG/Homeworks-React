@@ -10,6 +10,7 @@ import type {
 
 type Props = {
   reservations: Reservation[];
+  allReservations: Reservation[];
 
   deleteReservation: (id: number) => Promise<void>;
 
@@ -42,6 +43,7 @@ type Props = {
 
 export default function ReservationList({
   reservations,
+  allReservations,
   deleteReservation,
   confirmReservation,
   updateReservation,
@@ -70,6 +72,20 @@ export default function ReservationList({
 
     return result;
   }
+
+  const pendingCount = allReservations.filter(
+  (r) => r.status === "pending"
+).length;
+
+const confirmedCount = allReservations.filter(
+  (r) => r.status === "confirmed"
+).length;
+
+const cancelledCount = allReservations.filter(
+  (r) => r.status === "cancelled"
+).length;
+
+const allCount = allReservations.length;
 
   return (
     <div>
@@ -100,10 +116,10 @@ export default function ReservationList({
             }}
             className="border rounded-lg px-3 py-2"
           >
-            <option value="all">All</option>
-            <option value="pending">Pending {reservations.filter((r) => r.status === "pending").length}</option>
-            <option value="confirmed">Confirmed {reservations.filter((r) => r.status === "confirmed").length}</option>
-            <option value="cancelled">Cancelled {reservations.filter((r) => r.status === "cancelled").length}</option>
+            <option value="all">All ({allCount})</option>
+            <option value="pending" className = "bg-yellow-100 text-yellow-700">Pending ({pendingCount})</option>
+            <option value="confirmed" className = "bg-green-100 text-green-700">Confirmed ({confirmedCount})</option>
+            <option value="cancelled" className = "bg-red-100 text-red-700">Cancelled ({cancelledCount})</option>
           </select>
 
           {/* Sort */}

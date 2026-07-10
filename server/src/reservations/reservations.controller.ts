@@ -36,6 +36,18 @@ export class ReservationsController {
     return this.reservationsService.findAll(query);
   }
 
+  @Get('all')
+  @ApiOperation({ summary: 'Get all reservations without pagination' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all reservations',
+    type: Reservation,
+    isArray: true,
+  })
+  findAllReservations(): Promise<Reservation[]> {
+    return this.reservationsService.findAllReservations();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a single reservation by ID' })
   @ApiParam({ name: 'id', description: 'Reservation ID', example: 1 })
