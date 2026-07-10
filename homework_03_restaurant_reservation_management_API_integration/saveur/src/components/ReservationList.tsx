@@ -1,141 +1,193 @@
 import { useState } from "react";
 import ReservationCard from "./ReservationCard";
-import type { Reservation } from "../types/reservation";
+import EditReservationDialog from "./EditReservationDialog";
+
+import type {
+  Reservation,
+  SortDirection,
+  UpdateReservation,
+} from "../types/reservation";
 
 type Props = {
   reservations: Reservation[];
+
   deleteReservation: (id: number) => Promise<void>;
+
   confirmReservation: (id: number) => Promise<void>;
+
+  updateReservation: (
+    id: number,
+    data: UpdateReservation
+  ) => Promise<Reservation>;
+
+  search: string;
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
+
+  statusFilter: string;
+  setStatusFilter: React.Dispatch<React.SetStateAction<string>>;
+
+  sortBy: string;
+  setSortBy: React.Dispatch<React.SetStateAction<string>>;
+
+  sortOrder: SortDirection;
+  setSortOrder: React.Dispatch<
+    React.SetStateAction<SortDirection>
+  >;
+
+  page: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+
+  totalPages: number;
 };
 
 export default function ReservationList({
   reservations,
   deleteReservation,
   confirmReservation,
+  updateReservation,
+  search,
+  setSearch,
+  statusFilter,
+  setStatusFilter,
+  sortBy,
+  setSortBy,
+  sortOrder,
+  setSortOrder,
+  page,
+  setPage,
+  totalPages,
 }: Props) {
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [editingReservation, setEditingReservation] =
+    useState<Reservation | null>(null);
 
-  const filteredReservations = reservations.filter((reservation) => {
-    const matchesSearch = reservation.guestName
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  async function handleUpdateReservation(
+    id: number,
+    data: UpdateReservation
+  ): Promise<Reservation> {
+    const result = await updateReservation(id, data);
 
-    const matchesFilter =
-      filter === "all" || reservation.status === filter;
+    setEditingReservation(null);
 
-    return matchesSearch && matchesFilter;
-  });
-
-  const pendingCount = reservations.filter(
-    (reservation) => reservation.status === "pending"
-  ).length;
-
-  const confirmedCount = reservations.filter(
-    (reservation) => reservation.status === "confirmed"
-  ).length;
-
-  const cancelledCount = reservations.filter(
-    (reservation) => reservation.status === "cancelled"
-  ).length;
+    return result;
+  }
 
   return (
-     <div>
-      {/* Search & Filter */}
+    <div>
+      {/* Controls */}
 
       <div className="bg-white rounded-xl shadow-md p-5 mb-6">
-
-        <div className="flex gap-3 justify-end">
+        <div className="grid gap-4 md:grid-cols-4">
+          {/* Search */}
 
           <input
             type="text"
             placeholder="Search guest..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border border-slate-300 rounded-lg px-4 py-2 w-full lg:w-72"
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="border rounded-lg px-3 py-2"
           />
 
-          <div className="flex flex-wrap gap-2">
+          {/* Status */}
 
-            <button
-              onClick={() => setFilter("all")}
-              className={`px-4 py-2 rounded-lg transition
-                ${
-                  filter === "all"
-                    ? "bg-blue-600 text-white"
-                    : "bg-blue-100 text-blue-700"
-                }`}
-            >
-              All ({reservations.length})
-            </button>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="border rounded-lg px-3 py-2"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending {reservations.filter((r) => r.status === "pending").length}</option>
+            <option value="confirmed">Confirmed {reservations.filter((r) => r.status === "confirmed").length}</option>
+            <option value="cancelled">Cancelled {reservations.filter((r) => r.status === "cancelled").length}</option>
+          </select>
 
-            <button
-              onClick={() => setFilter("pending")}
-              className={`px-4 py-2 rounded-lg transition
-                ${
-                  filter === "pending"
-                    ? "bg-yellow-500 text-white"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-            >
-              Pending ({pendingCount})
-            </button>
+          {/* Sort */}
 
-            <button
-              onClick={() => setFilter("confirmed")}
-              className={`px-4 py-2 rounded-lg transition
-                ${
-                  filter === "confirmed"
-                    ? "bg-green-600 text-white"
-                    : "bg-green-100 text-green-700"
-                }`}
-            >
-              Confirmed ({confirmedCount})
-            </button>
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setPage(1);
+            }}
+            className="border rounded-lg px-3 py-2"
+          >
+            <option value="createdAt">Created</option>
+            <option value="arrivalTime">Arrival Time</option>
+            <option value="guestName">Guest Name</option>
+            <option value="partySize">Party Size</option>
+          </select>
 
-            <button
-              onClick={() => setFilter("cancelled")}
-              className={`px-4 py-2 rounded-lg transition
-                ${
-                  filter === "cancelled"
-                    ? "bg-red-600 text-white"
-                    : "bg-red-100 text-red-700"
-                }`}
-            >
-              Cancelled ({cancelledCount})
-            </button>
+          {/* Sort Direction */}
 
-          </div>
-
+          <select
+            value={sortOrder}
+            onChange={(e) => {
+              setSortOrder(
+                e.target.value as SortDirection
+              );
+              setPage(1);
+            }}
+            className="border rounded-lg px-3 py-2"
+          >
+            <option value="ASC">Ascending</option>
+            <option value="DESC">Descending</option>
+          </select>
         </div>
-
       </div>
 
-      {/* Empty State */}
+      {/* Reservation Cards */}
 
-      {filteredReservations.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-md p-10 text-center">
-          <h2 className="text-xl font-semibold text-slate-700">
-            No reservations found
-          </h2>
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {reservations.map((reservation) => (
+          <ReservationCard
+            key={reservation.id}
+            reservation={reservation}
+            confirmReservation={confirmReservation}
+            deleteReservation={deleteReservation}
+            onEdit={setEditingReservation}
+          />
+        ))}
+      </div>
 
-          <p className="text-slate-500 mt-2">
-            Try changing the search or filter.
-          </p>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-3 xl:grid-cols-4 gap-5">
+      {/* Pagination */}
 
-          {filteredReservations.map((reservation) => (
-            <ReservationCard
-              key={reservation.id}
-              reservation={reservation}
-              deleteReservation={deleteReservation}
-              confirmReservation={confirmReservation}
-            />
-          ))}
+      <div className="flex justify-center items-center gap-4 mt-8">
+        <button
+          onClick={() => setPage((current) => current - 1)}
+          disabled={page === 1}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300"
+        >
+          Previous
+        </button>
 
-        </div>
+        <span className="font-medium">
+          Page {page} of {totalPages}
+        </span>
+
+        <button
+          onClick={() => setPage((current) => current + 1)}
+          disabled={page === totalPages}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* Edit Reservation Dialog */}
+
+      {editingReservation && (
+        <EditReservationDialog
+          reservation={editingReservation}
+          reservations={reservations}
+          updateReservation={handleUpdateReservation}
+          onClose={() => setEditingReservation(null)}
+          onSuccess={() => handleUpdateReservation}
+        />
       )}
     </div>
   );

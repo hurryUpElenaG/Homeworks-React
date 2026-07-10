@@ -2,11 +2,47 @@ import type {
   CreateReservation,
   Reservation,
   UpdateReservation,
+  ReservationResponse
 } from "../types/reservation";
 
 const BASE_URL = "http://localhost:3000/api";
 
-export async function fetchReservations(): Promise<Reservation[]> {
+
+export async function fetchReservations(
+  search = "",
+  status = "",
+  sortBy = "createdAt",
+  sortOrder: "ASC" | "DESC" = "ASC",
+  page = 1,
+  limit = 10
+): Promise<ReservationResponse> {
+  const params = new URLSearchParams();
+
+  if (search) {
+    params.append("search", search);
+  }
+
+  if (status && status !== "all") {
+    params.append("status", status);
+  }
+
+  params.append("sortBy", sortBy);
+  params.append("sortOrder", sortOrder);
+  params.append("page", page.toString());
+  params.append("limit", limit.toString());
+
+  const response = await fetch(
+    `${BASE_URL}/reservations?${params.toString()}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to load reservations.");
+  }
+
+  return response.json();
+}
+
+export async function fetchAllReservations(): Promise<Reservation[]> {
   try {
     const rawResponse = await fetch(`${BASE_URL}/reservations`);
 
@@ -15,7 +51,7 @@ export async function fetchReservations(): Promise<Reservation[]> {
     }
 
     const rawData = await rawResponse.json();
-
+    console.log(rawData)
 
     return rawData;
 
@@ -24,6 +60,7 @@ export async function fetchReservations(): Promise<Reservation[]> {
     throw error;
   }
 }
+
 
 export async function createReservation(
   body: CreateReservation
@@ -86,3 +123,5 @@ export async function updateReservation(
     throw error;
   }
 }
+
+

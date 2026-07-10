@@ -4,9 +4,23 @@ import ReservationList from "./components/ReservationList";
 import Dashboard from "./components/Dashboard";
 import NewReservationForm from "./components/NewReservationForm";
 import type { HttpStatus } from "./types/http-status";
+import { useDebounce } from "./hooks/useDebounce";
 
-import {fetchReservations, createReservation, deleteReservation, updateReservation } from "./lib/api";
-import type { Reservation, CreateReservation } from "./types/reservation";
+import {
+  fetchReservations,
+  fetchAllReservations,
+  createReservation,
+  deleteReservation,
+  updateReservation,
+} from "./lib/api";
+
+import type {
+  Reservation,
+  CreateReservation,
+  UpdateReservation,
+  SortDirection,
+  SortBy,
+} from "./types/reservation";
 
 type ActivePage = "list" | "dashboard" | "form";
 
@@ -15,37 +29,88 @@ export default function App() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [status, setStatus] = useState<HttpStatus>("loading");
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<SortBy>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortDirection>("ASC");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const debouncedSearch = useDebounce(search);
+  const [dashboardReservations, setDashboardReservations] = useState<Reservation[]>([]);
+
+  async function loadReservations() {
+    try {
+      setStatus("loading");
+
+      const response = await fetchReservations(
+        debouncedSearch,
+        statusFilter,
+        sortBy,
+        sortOrder,
+        page,
+        10, //limit
+      );
+
+      setReservations(response.data);
+      setTotalPages(response.totalPages);
+      setStatus("success");
+    } catch (error) {
+      console.error(error);
+
+      setError("Failed to load reservations.");
+      setStatus("error");
+    }
+  }
 
   useEffect(() => {
-		setStatus('loading'); 
-		fetchReservations()
-			.then(payload => {
-				setReservations(payload.data);
-				setStatus('success'); 
-			})
-			.catch(err => {
-				setStatus('error');
-				setError(err.message); 
-			});
+    loadReservations();
+  }, [debouncedSearch, statusFilter, sortBy, sortOrder, page]);
 
-	}, []);
 
-  async function addReservation(reservation: CreateReservation) {
+  async function loadReservationsForDashboard() {
+    try {
+      setStatus("loading");
+
+      const response = await fetchAllReservations();
+
+      setDashboardReservations(response.data);
+      setStatus("success");
+    } catch (error) {
+      console.error(error);
+
+      setError("Failed to load reservations.");
+      setStatus("error");
+    }
+  }
+
+  useEffect(() => {
+  if (activePage === "dashboard") {
+    loadReservationsForDashboard();
+  }
+}, [activePage]);
+
+  async function addReservation(
+    reservation: CreateReservation,
+  ): Promise<Reservation> {
     try {
       const newReservation = await createReservation(reservation);
 
       setReservations((previous) => [...previous, newReservation]);
 
       setActivePage("list");
+
+      return newReservation;
     } catch (error) {
       console.error(error);
-
       alert("Failed to create reservation.");
+      throw error;
     }
   }
 
   async function handleDeleteReservation(id: number) {
-    const confirmed = window.confirm("Are you sure to cancel this reservation?");
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this reservation?",
+    );
 
     if (!confirmed) {
       return;
@@ -54,9 +119,7 @@ export default function App() {
     try {
       await deleteReservation(id);
 
-      setReservations((previous) =>
-        previous.filter((reservation) => reservation.id !== id),
-      );
+      await loadReservations();
     } catch (error) {
       console.error(error);
 
@@ -66,19 +129,30 @@ export default function App() {
 
   async function handleConfirmReservation(id: number) {
     try {
-      const updatedReservation = await updateReservation(id, {
+      await updateReservation(id, {
         status: "confirmed",
       });
 
-      setReservations((previous) =>
-        previous.map((reservation) =>
-          reservation.id === id ? updatedReservation : reservation,
-        ),
-      );
+      await loadReservations();
     } catch (error) {
       console.error(error);
 
       alert("Failed to confirm reservation.");
+    }
+  }
+
+  async function handleUpdateReservation(id: number, data: UpdateReservation): Promise<Reservation> {
+    try {
+      const updatedReservation = await updateReservation(id, data);
+
+      await loadReservations();
+
+      return updatedReservation;
+    } catch (error) {
+      console.error(error);
+
+      alert("Failed to update reservation.");
+      throw error;
     }
   }
 
@@ -107,18 +181,31 @@ export default function App() {
                   reservations={reservations}
                   deleteReservation={handleDeleteReservation}
                   confirmReservation={handleConfirmReservation}
+                  updateReservation={handleUpdateReservation}
+                  search={search}
+                  setSearch={setSearch}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  sortOrder={sortOrder}
+                  setSortOrder={setSortOrder}
+                  page={page}
+                  setPage={setPage}
+                  totalPages={totalPages}
                 />
               )}
 
               {activePage === "form" && (
                 <NewReservationForm
                   reservations={reservations}
-                  addReservation={addReservation}
+                  createReservation={addReservation}
+                  onSuccess={() => setActivePage("list")}
                 />
               )}
 
               {activePage === "dashboard" && (
-                <Dashboard reservations={reservations} />
+                <Dashboard dashboardReservations={dashboardReservations} />
               )}
             </>
           )}
