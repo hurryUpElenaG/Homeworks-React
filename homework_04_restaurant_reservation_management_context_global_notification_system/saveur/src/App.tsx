@@ -5,6 +5,7 @@ import Dashboard from "./components/Dashboard";
 import NewReservationForm from "./components/NewReservationForm";
 import type { HttpStatus } from "./types/http-status";
 import { useDebounce } from "./hooks/useDebounce";
+import { useNotifications } from "./hooks/useNotifications";
 
 import {
   fetchReservations,
@@ -37,6 +38,7 @@ export default function App() {
   const [totalPages, setTotalPages] = useState(1);
   const debouncedSearch = useDebounce(search);
   const [allReservations, setAllReservations] = useState<Reservation[]>([]);
+  const { notify } = useNotifications();
 
   async function loadReservations() {
     try {
@@ -89,12 +91,22 @@ export default function App() {
       setReservations((previous) => [...previous, newReservation]);
       setAllReservations((previous) => [...previous, newReservation]);
 
+      notify(
+        `Reservation for ${newReservation.guestName} has been created.`,
+        "success",
+      );
+
       setActivePage("list");
 
       return newReservation;
-    } catch (error) {
-      console.error(error);
-      alert("Failed to create reservation.");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to create reservation.";
+
+      notify(message, "error");
+
       throw error;
     }
   }
@@ -111,12 +123,17 @@ export default function App() {
     try {
       await deleteReservation(id);
 
+      notify("Reservation has been cancelled.", "success");
+
       await loadReservations();
       await loadAllReservations();
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to delete reservation.";
 
-      alert("Failed to delete reservation.");
+      notify(message, "error");
     }
   }
 
@@ -126,12 +143,17 @@ export default function App() {
         status: "confirmed",
       });
 
+      notify("Reservation confirmed successfully.", "success");
+
       await loadReservations();
       await loadAllReservations();
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update reservation.";
 
-      alert("Failed to confirm reservation.");
+      notify(message, "error");
     }
   }
 
@@ -145,11 +167,17 @@ export default function App() {
       await loadReservations();
       await loadAllReservations();
 
-      return updatedReservation;
-    } catch (error) {
-      console.error(error);
+      notify("Reservation updated successfully.", "success");
 
-      alert("Failed to update reservation.");
+      return updatedReservation;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update reservation.";
+
+      notify(message, "error");
+
       throw error;
     }
   }
