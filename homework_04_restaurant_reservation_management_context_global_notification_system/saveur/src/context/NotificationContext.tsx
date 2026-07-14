@@ -1,24 +1,12 @@
-import {createContext, useReducer, type ReactNode} from "react";
+import { useReducer, type ReactNode } from "react";
 import NotificationOverlay from "../components/NotificationOverlay";
+import {
+  NotificationContext,
+  type Notification,
+  type NotificationType,
+} from "./NotificationContextType";
 
-export type NotificationType = "success" | "error" | "info";
-
-export type Notification = {
-  id: string;
-  message: string;
-  type: NotificationType;
-};
-
-type NotificationContextType = {
-  notifications: Notification[];
-  notify: (
-    message: string,
-    type: NotificationType,
-  ) => void;
-  dismiss: (id: string) => void;
-};
-
-export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+export type { Notification, NotificationType };
 
 type Action =
   | {
