@@ -59,7 +59,7 @@ export default function NewReservationForm({
     reset,
     watch,
     trigger,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     defaultValues: toFormValues(reservation),
     mode: "onChange",
@@ -86,7 +86,7 @@ export default function NewReservationForm({
 
       if (isEditing) {
 
-        const result = await updateReservation?.(reservation!.id, payload);
+        await updateReservation?.(reservation!.id, payload);
 
         onClose?.();
       } else {

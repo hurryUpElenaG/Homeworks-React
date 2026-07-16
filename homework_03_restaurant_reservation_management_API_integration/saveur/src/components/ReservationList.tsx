@@ -5,6 +5,7 @@ import EditReservationDialog from "./EditReservationDialog";
 import type {
   Reservation,
   SortDirection,
+  SortBy,
   UpdateReservation,
 } from "../types/reservation";
 
@@ -27,8 +28,8 @@ type Props = {
   statusFilter: string;
   setStatusFilter: React.Dispatch<React.SetStateAction<string>>;
 
-  sortBy: string;
-  setSortBy: React.Dispatch<React.SetStateAction<string>>;
+  sortBy: SortBy;
+  setSortBy: React.Dispatch<React.SetStateAction<SortBy>>;
 
   sortOrder: SortDirection;
   setSortOrder: React.Dispatch<
@@ -127,7 +128,7 @@ const allCount = allReservations.length;
           <select
             value={sortBy}
             onChange={(e) => {
-              setSortBy(e.target.value);
+              setSortBy(e.target.value as SortBy);
               setPage(1);
             }}
             className="border rounded-lg px-3 py-2"
