@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import Header from "./components/Header";
-import ReservationList from "./components/ReservationList";
-import Dashboard from "./components/Dashboard";
-import NewReservationForm from "./components/NewReservationForm";
+import { Routes, Route } from "react-router-dom";
+import AppLayout from "./components/AppLayout";
+
+import ReservationsPage from "./pages/ReservationsPage";
+import ReservationDetailsPage from "./pages/ReservationDetailsPage";
+import NewReservationPage from "./pages/NewReservationPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import DashboardPage from "./pages/DashboardPage";
+import EditReservationPage from "./pages/EditReservationPage";
+
 import type { HttpStatus } from "./types/http-status";
 import { useDebounce } from "./hooks/useDebounce";
 import { useNotifications } from "./hooks/useNotifications";
@@ -23,10 +29,7 @@ import type {
   SortBy,
 } from "./types/reservation";
 
-type ActivePage = "list" | "dashboard" | "form";
-
 export default function App() {
-  const [activePage, setActivePage] = useState<ActivePage>("list");
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [status, setStatus] = useState<HttpStatus>("loading");
   const [error, setError] = useState("");
@@ -95,8 +98,6 @@ export default function App() {
         `Reservation for ${newReservation.guestName} has been created.`,
         "success",
       );
-
-      setActivePage("list");
 
       return newReservation;
     } catch (error: unknown) {
@@ -183,61 +184,62 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50">
-      <div className="max-w-6xl mx-auto p-8">
-        <Header activePage={activePage} setActivePage={setActivePage} />
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route
+          index
+          element={
+            <ReservationsPage
+              reservations={reservations}
+              allReservations={allReservations}
+              status={status}
+              error={error}
+              deleteReservation={handleDeleteReservation}
+              confirmReservation={handleConfirmReservation}
+              search={search}
+              setSearch={setSearch}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+              page={page}
+              setPage={setPage}
+              totalPages={totalPages}
+            />
+          }
+        />
 
-        <main className="max-w-6xl mx-auto p-8">
-          {status === "loading" && (
-            <p className="text-center text-slate-600">
-              Loading reservations...
-            </p>
-          )}
+        <Route
+          path="dashboard"
+          element={<DashboardPage reservations={allReservations} />}
+        />
 
-          {status === "error" && (
-            <div className="bg-red-100 text-red-700 p-4 rounded-xl">
-              {error}
-            </div>
-          )}
+        <Route
+          path="reservations/new"
+          element={
+            <NewReservationPage
+              reservations={allReservations}
+              createReservation={addReservation}
+            />
+          }
+        />
 
-          {status === "success" && (
-            <>
-              {activePage === "list" && (
-                <ReservationList
-                  reservations={reservations}
-                  allReservations={allReservations}
-                  deleteReservation={handleDeleteReservation}
-                  confirmReservation={handleConfirmReservation}
-                  updateReservation={handleUpdateReservation}
-                  search={search}
-                  setSearch={setSearch}
-                  statusFilter={statusFilter}
-                  setStatusFilter={setStatusFilter}
-                  sortBy={sortBy}
-                  setSortBy={setSortBy}
-                  sortOrder={sortOrder}
-                  setSortOrder={setSortOrder}
-                  page={page}
-                  setPage={setPage}
-                  totalPages={totalPages}
-                />
-              )}
+        <Route path="reservations/:id" element={<ReservationDetailsPage />} />
+      </Route>
 
-              {activePage === "form" && (
-                <NewReservationForm
-                  reservations={reservations}
-                  createReservation={addReservation}
-                  onSuccess={() => setActivePage("list")}
-                />
-              )}
+      <Route
+        path="reservations/:id/edit"
+        element={
+          <EditReservationPage
+            reservations={allReservations}
+            updateReservation={handleUpdateReservation}
+          />
+        }
+      />
 
-              {activePage === "dashboard" && (
-                <Dashboard reservations={allReservations} />
-              )}
-            </>
-          )}
-        </main>
-      </div>
-    </div>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }

@@ -220,11 +220,14 @@ export default function NewReservationForm({
                   !reservations.some(
                     (r) =>
                       r.tableNumber === value &&
+                      // r.arrivalTime === watch("arrivalTime") &&
                       r.status !== "cancelled" &&
                       r.id !== reservation?.id,
                   ) || "This table is already booked for the evening!",
 
                 valueAsNumber: true,
+                
+
               },
             )}
           />

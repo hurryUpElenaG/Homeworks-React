@@ -63,6 +63,25 @@ export async function fetchAllReservations(): Promise<Reservation[]> {
 }
 
 
+export async function fetchReservation(id: string): Promise<Reservation> {
+	try {
+		const response = await fetch(`${BASE_URL}/reservations/${id}`);
+
+		const rawData = await response.json();
+
+		if (!response.ok) {
+			// Throw with the server's error message so the caller can show it to the user.
+			throw new Error(rawData.message);
+		}
+
+		return rawData;
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
+}
+
+
 export async function createReservation(
   body: CreateReservation
 ): Promise<Reservation> {

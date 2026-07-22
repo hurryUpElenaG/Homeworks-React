@@ -1,12 +1,9 @@
-import { useState } from "react";
 import ReservationCard from "./ReservationCard";
-import EditReservationDialog from "./EditReservationDialog";
 
 import type {
   Reservation,
   SortDirection,
-  SortBy,
-  UpdateReservation,
+  SortBy
 } from "../types/reservation";
 
 type Props = {
@@ -16,11 +13,6 @@ type Props = {
   deleteReservation: (id: number) => Promise<void>;
 
   confirmReservation: (id: number) => Promise<void>;
-
-  updateReservation: (
-    id: number,
-    data: UpdateReservation
-  ) => Promise<Reservation>;
 
   search: string;
   setSearch: React.Dispatch<React.SetStateAction<string>>;
@@ -47,7 +39,6 @@ export default function ReservationList({
   allReservations,
   deleteReservation,
   confirmReservation,
-  updateReservation,
   search,
   setSearch,
   statusFilter,
@@ -60,19 +51,6 @@ export default function ReservationList({
   setPage,
   totalPages,
 }: Props) {
-  const [editingReservation, setEditingReservation] =
-    useState<Reservation | null>(null);
-
-  async function handleUpdateReservation(
-    id: number,
-    data: UpdateReservation
-  ): Promise<Reservation> {
-    const result = await updateReservation(id, data);
-
-    setEditingReservation(null);
-
-    return result;
-  }
 
   const pendingCount = allReservations.filter(
   (r) => r.status === "pending"
@@ -166,7 +144,6 @@ const allCount = allReservations.length;
             reservation={reservation}
             confirmReservation={confirmReservation}
             deleteReservation={deleteReservation}
-            onEdit={setEditingReservation}
           />
         ))}
       </div>
@@ -194,18 +171,6 @@ const allCount = allReservations.length;
           Next
         </button>
       </div>
-
-      {/* Edit Reservation Dialog */}
-
-      {editingReservation && (
-        <EditReservationDialog
-          reservation={editingReservation}
-          reservations={reservations}
-          updateReservation={handleUpdateReservation}
-          onClose={() => setEditingReservation(null)}
-          onSuccess={() => handleUpdateReservation}
-        />
-      )}
     </div>
   );
 }

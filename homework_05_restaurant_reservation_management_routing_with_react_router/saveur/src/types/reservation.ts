@@ -43,9 +43,3 @@ export type ReservationsQueryParams = {
 };
 
 
-  /*search = "",
-  status = "",
-  sortBy = ,
-  sortOrder: "ASC" | "DESC" = "ASC",
-  page = 1,
-  limit = 10*/
