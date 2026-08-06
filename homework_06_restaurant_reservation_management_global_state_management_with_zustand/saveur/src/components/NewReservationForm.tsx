@@ -1,20 +1,12 @@
-import { useForm } from "react-hook-form";
 import { useEffect } from "react";
-import type {
-  CreateReservation,
-  Reservation,
-  UpdateReservation,
-} from "../types/reservation";
+import { useForm } from "react-hook-form";
 
+import { useReservationStore } from "../store/reservationStore";
+
+import type { CreateReservation, Reservation } from "../types/reservation";
 
 type ReservationProps = {
-  reservations: Reservation[];
-  createReservation?: (reservation: CreateReservation) => Promise<Reservation>;
   reservation?: Reservation;
-  updateReservation?: (
-    id: number,
-    reservation: UpdateReservation,
-  ) => Promise<Reservation>;
   onSuccess?: () => void;
   onClose?: () => void;
 };
@@ -38,20 +30,36 @@ function toFormValues(reservation?: Reservation): FormValues {
 }
 
 const ARRIVAL_TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 const LABEL_CLASSES = "block text-sm font-medium text-slate-700";
+
 const INPUT_CLASSES =
   "mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20";
+
 const ERROR_FIELD_CLASSES = "mt-1 text-xs text-red-600";
 
 export default function NewReservationForm({
-  reservations,
-  createReservation,
   reservation,
-  updateReservation,
   onSuccess,
   onClose,
 }: ReservationProps) {
   const isEditing = !!reservation;
+
+  // ============================
+  // ZUSTAND
+  // ============================
+
+  const addReservation = useReservationStore((state) => state.addReservation);
+
+  const updateReservation = useReservationStore(
+    (state) => state.updateReservation,
+  );
+
+  const allReservations = useReservationStore((state) => state.allReservations);
+
+  // ============================
+  // FORM
+  // ============================
 
   const {
     register,
@@ -72,8 +80,11 @@ export default function NewReservationForm({
 
   const party = watch("partySize");
 
-  const onSubmit = async (data: FormValues) => {
+  // ============================
+  // SUBMIT
+  // ============================
 
+  const onSubmit = async (data: FormValues) => {
     try {
       const payload: CreateReservation = {
         guestName: data.guestName,
@@ -83,20 +94,17 @@ export default function NewReservationForm({
         notes: data.notes,
       };
 
-
       if (isEditing) {
-
-        await updateReservation?.(reservation!.id, payload);
+        await updateReservation(reservation!.id, payload);
 
         onClose?.();
       } else {
-        await createReservation?.(payload);
+        await addReservation(payload);
       }
 
       onSuccess?.();
-
     } catch (error) {
-      console.error("ERROR:", error);
+      console.error(error);
     }
   };
 
@@ -111,53 +119,47 @@ export default function NewReservationForm({
 
         <div>
           <label className={LABEL_CLASSES}>Guest name *</label>
+
           <input
             placeholder="Guest name"
             className={INPUT_CLASSES}
-            {...register(
-              "guestName",
+            {...register("guestName", {
+              required: "Guest name is required",
 
-              {
-                required: "Guest name is required",
-
-                minLength: {
-                  value: 2,
-                  message: "Minimum 2 characters",
-                },
+              minLength: {
+                value: 2,
+                message: "Minimum 2 characters",
               },
-            )}
+            })}
           />
 
           <p className={ERROR_FIELD_CLASSES}>{errors.guestName?.message}</p>
         </div>
 
-        {/* Party */}
+        {/* Party Size */}
 
         <div>
           <label className={LABEL_CLASSES}>Party size *</label>
+
           <input
             type="number"
             placeholder="Party size"
             className={INPUT_CLASSES}
-            {...register(
-              "partySize",
+            {...register("partySize", {
+              required: "Party size required",
 
-              {
-                required: "Party size required",
-
-                min: {
-                  value: 1,
-                  message: "Minimum 1",
-                },
-
-                max: {
-                  value: 20,
-                  message: "Maximum 20",
-                },
-
-                valueAsNumber: true,
+              min: {
+                value: 1,
+                message: "Minimum 1",
               },
-            )}
+
+              max: {
+                value: 20,
+                message: "Maximum 20",
+              },
+
+              valueAsNumber: true,
+            })}
           />
 
           <p className="text-sm text-blue-600">
@@ -167,68 +169,59 @@ export default function NewReservationForm({
           <p className={ERROR_FIELD_CLASSES}>{errors.partySize?.message}</p>
         </div>
 
-        {/* Time */}
+        {/* Arrival Time */}
 
         <div>
           <label className={LABEL_CLASSES}>Arrival time *</label>
+
           <input
             placeholder="19:30"
             className={INPUT_CLASSES}
-            {...register(
-              "arrivalTime",
+            {...register("arrivalTime", {
+              required: "Time required",
 
-              {
-                required: "Time required",
-                pattern: {
-                  value: ARRIVAL_TIME_PATTERN,
-                  message: "Use HH:MM",
-                },
+              pattern: {
+                value: ARRIVAL_TIME_PATTERN,
+                message: "Use HH:MM",
               },
-            )}
+            })}
           />
 
-          {errors.arrivalTime && (
-            <p className={ERROR_FIELD_CLASSES}>{errors.arrivalTime?.message}</p>
-          )}
+          <p className={ERROR_FIELD_CLASSES}>{errors.arrivalTime?.message}</p>
         </div>
 
-        {/* Table */}
+        {/* Table Number */}
 
         <div>
           <label className={LABEL_CLASSES}>Table number *</label>
+
           <input
             type="number"
             placeholder="Table number"
             className={INPUT_CLASSES}
-            {...register(
-              "tableNumber",
+            {...register("tableNumber", {
+              required: "Table required",
 
-              {
-                required: "Table required",
-
-                min: {
-                  value: 1,
-                  message: "Min 1",
-                },
-
-                max: {
-                  value: 20,
-                  message: "Max 20",
-                },
-
-                validate: (value) =>
-                  !reservations.some(
-                    (r) =>
-                      r.tableNumber === value &&
-                      r.status !== "cancelled" &&
-                      r.id !== reservation?.id,
-                  ) || "This table is already booked for the evening!",
-
-                valueAsNumber: true,
-                
-
+              min: {
+                value: 1,
+                message: "Minimum 1",
               },
-            )}
+
+              max: {
+                value: 20,
+                message: "Maximum 20",
+              },
+
+              valueAsNumber: true,
+
+              validate: (value) =>
+                !allReservations.some(
+                  (r) =>
+                    r.tableNumber === value &&
+                    r.status !== "cancelled" &&
+                    r.id !== reservation?.id,
+                ) || "This table is already booked for the evening!",
+            })}
           />
 
           <p className={ERROR_FIELD_CLASSES}>{errors.tableNumber?.message}</p>
@@ -238,23 +231,27 @@ export default function NewReservationForm({
 
         <div>
           <label className={LABEL_CLASSES}>Notes</label>
+
           <textarea rows={3} className={INPUT_CLASSES} {...register("notes")} />
         </div>
 
-        <div className="flex gap-2 justify-end">
+        {/* Buttons */}
+
+        <div className="flex justify-end gap-2">
           {isEditing && (
             <button
               type="button"
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm"
               onClick={onClose}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
             >
               Cancel
             </button>
           )}
+
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white px-4 py-2 rounded-lg"
           >
             {isSubmitting
               ? "Saving..."

@@ -1,38 +1,41 @@
-import type { Reservation } from "../types/reservation";
+import {
+  selectCancelledCount,
+  selectConfirmedCount,
+  selectPendingCount,
+  selectTotalConfirmedGuests,
+  selectTotalReservations,
+} from "../store/reservationSelectors";
 
-type Props = {
-  reservations: Reservation[];
-};
+import { useReservationStore } from "../store/reservationStore";
 
-export default function Dashboard({ reservations }: Props) {
-  const confirmedReservations = reservations.filter(
-    (reservation) => reservation.status === "confirmed"
+export default function Dashboard() {
+  const confirmedGuests = useReservationStore(
+    selectTotalConfirmedGuests
   );
 
-  const confirmedGuests = confirmedReservations.reduce(
-    (total, reservation) => total + reservation.partySize,
-    0
+  const confirmedReservations = useReservationStore(
+    selectConfirmedCount
   );
 
-  const confirmedTables = confirmedReservations.length;
+  const pendingReservations = useReservationStore(
+    selectPendingCount
+  );
 
-  const pendingReservations = reservations.filter(
-    (reservation) => reservation.status === "pending"
-  ).length;
+  const cancelledReservations = useReservationStore(
+    selectCancelledCount
+  );
 
-  const cancelledReservations = reservations.filter(
-    (reservation) => reservation.status === "cancelled"
-  ).length;
+  const totalReservations = useReservationStore(
+    selectTotalReservations
+  );
 
   return (
     <div>
-
       <h2 className="text-3xl font-bold text-blue-700 mb-8">
         Dashboard
       </h2>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-
         {/* Guests */}
 
         <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-blue-600">
@@ -57,7 +60,7 @@ export default function Dashboard({ reservations }: Props) {
           </p>
 
           <h3 className="text-4xl font-bold text-green-700 mt-3">
-            {confirmedTables}
+            {confirmedReservations}
           </h3>
 
           <p className="text-slate-500 mt-2">
@@ -96,35 +99,35 @@ export default function Dashboard({ reservations }: Props) {
             Cancelled today
           </p>
         </div>
-
       </div>
 
       {/* Summary */}
 
       <div className="bg-white rounded-2xl shadow-md mt-10 p-6">
-
         <h3 className="text-xl font-semibold text-slate-800 mb-4">
           Tonight's Summary
         </h3>
 
         <div className="space-y-3 text-slate-700">
-
           <div className="flex justify-between border-b pb-2">
             <span>Total Reservations</span>
+
             <span className="font-semibold">
-              {reservations.length}
+              {totalReservations}
             </span>
           </div>
 
           <div className="flex justify-between border-b pb-2">
             <span>Confirmed Reservations</span>
+
             <span className="font-semibold">
-              {confirmedReservations.length}
+              {confirmedReservations}
             </span>
           </div>
 
           <div className="flex justify-between border-b pb-2">
             <span>Pending Reservations</span>
+
             <span className="font-semibold">
               {pendingReservations}
             </span>
@@ -132,15 +135,13 @@ export default function Dashboard({ reservations }: Props) {
 
           <div className="flex justify-between">
             <span>Cancelled Reservations</span>
+
             <span className="font-semibold">
               {cancelledReservations}
             </span>
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

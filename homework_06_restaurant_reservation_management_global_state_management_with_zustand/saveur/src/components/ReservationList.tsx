@@ -1,70 +1,45 @@
 import ReservationCard from "./ReservationCard";
 
-import type {
-  Reservation,
-  SortDirection,
-  SortBy
-} from "../types/reservation";
+import type { Reservation, SortBy, SortDirection } from "../types/reservation";
+
+import { useReservationStore } from "../store/reservationStore";
+import {
+  selectPage,
+  selectStatusFilter,
+  selectSearch,
+  selectSortBy,
+  selectSortOrder,
+  selectTotalPages,
+  selectPendingCount,
+  selectConfirmedCount,
+  selectCancelledCount,
+  selectTotalReservations,
+} from "../store/reservationSelectors";
 
 type Props = {
   reservations: Reservation[];
-  allReservations: Reservation[];
-
-  deleteReservation: (id: number) => Promise<void>;
-
-  confirmReservation: (id: number) => Promise<void>;
-
-  search: string;
-  setSearch: React.Dispatch<React.SetStateAction<string>>;
-
-  statusFilter: string;
-  setStatusFilter: React.Dispatch<React.SetStateAction<string>>;
-
-  sortBy: SortBy;
-  setSortBy: React.Dispatch<React.SetStateAction<SortBy>>;
-
-  sortOrder: SortDirection;
-  setSortOrder: React.Dispatch<
-    React.SetStateAction<SortDirection>
-  >;
-
-  page: number;
-  setPage: React.Dispatch<React.SetStateAction<number>>;
-
-  totalPages: number;
 };
 
-export default function ReservationList({
-  reservations,
-  allReservations,
-  deleteReservation,
-  confirmReservation,
-  search,
-  setSearch,
-  statusFilter,
-  setStatusFilter,
-  sortBy,
-  setSortBy,
-  sortOrder,
-  setSortOrder,
-  page,
-  setPage,
-  totalPages,
-}: Props) {
+export default function ReservationList({ reservations }: Props) {
 
-  const pendingCount = allReservations.filter(
-  (r) => r.status === "pending"
-).length;
+  const search = useReservationStore(selectSearch);
+  const statusFilter = useReservationStore(selectStatusFilter);
+  const sortBy = useReservationStore(selectSortBy);
+  const sortOrder = useReservationStore(selectSortOrder);
 
-const confirmedCount = allReservations.filter(
-  (r) => r.status === "confirmed"
-).length;
+  const page = useReservationStore(selectPage);
+  const totalPages = useReservationStore(selectTotalPages);
 
-const cancelledCount = allReservations.filter(
-  (r) => r.status === "cancelled"
-).length;
+  const setSearch = useReservationStore((state) => state.setSearch);
+  const setStatusFilter = useReservationStore((state) => state.setStatusFilter);
+  const setSortBy = useReservationStore((state) => state.setSortBy);
+  const setSortOrder = useReservationStore((state) => state.setSortOrder);
+  const setPage = useReservationStore((state) => state.setPage);
 
-const allCount = allReservations.length;
+  const pendingCount = useReservationStore(selectPendingCount);
+  const confirmedCount = useReservationStore(selectConfirmedCount);
+  const cancelledCount = useReservationStore(selectCancelledCount);
+  const allCount = useReservationStore(selectTotalReservations);
 
   return (
     <div>
@@ -72,43 +47,35 @@ const allCount = allReservations.length;
 
       <div className="bg-white rounded-xl shadow-md p-5 mb-6">
         <div className="grid gap-4 md:grid-cols-4">
-          {/* Search */}
-
           <input
             type="text"
             placeholder="Search guest..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             className="border rounded-lg px-3 py-2"
           />
 
-          {/* Status */}
-
           <select
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value as "all" | "pending" | "confirmed" | "cancelled",
+              )
+            }
             className="border rounded-lg px-3 py-2"
           >
             <option value="all">All ({allCount})</option>
-            <option value="pending" className = "bg-yellow-100 text-yellow-700">Pending ({pendingCount})</option>
-            <option value="confirmed" className = "bg-green-100 text-green-700">Confirmed ({confirmedCount})</option>
-            <option value="cancelled" className = "bg-red-100 text-red-700">Cancelled ({cancelledCount})</option>
-          </select>
 
-          {/* Sort */}
+            <option value="pending">Pending ({pendingCount})</option>
+
+            <option value="confirmed">Confirmed ({confirmedCount})</option>
+
+            <option value="cancelled">Cancelled ({cancelledCount})</option>
+          </select>
 
           <select
             value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value as SortBy);
-              setPage(1);
-            }}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
             className="border rounded-lg px-3 py-2"
           >
             <option value="createdAt">Created</option>
@@ -117,16 +84,9 @@ const allCount = allReservations.length;
             <option value="partySize">Party Size</option>
           </select>
 
-          {/* Sort Direction */}
-
           <select
             value={sortOrder}
-            onChange={(e) => {
-              setSortOrder(
-                e.target.value as SortDirection
-              );
-              setPage(1);
-            }}
+            onChange={(e) => setSortOrder(e.target.value as SortDirection)}
             className="border rounded-lg px-3 py-2"
           >
             <option value="ASC">Ascending</option>
@@ -139,12 +99,7 @@ const allCount = allReservations.length;
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {reservations.map((reservation) => (
-          <ReservationCard
-            key={reservation.id}
-            reservation={reservation}
-            confirmReservation={confirmReservation}
-            deleteReservation={deleteReservation}
-          />
+          <ReservationCard key={reservation.id} reservation={reservation} />
         ))}
       </div>
 
@@ -152,7 +107,7 @@ const allCount = allReservations.length;
 
       <div className="flex justify-center items-center gap-4 mt-8">
         <button
-          onClick={() => setPage((current) => current - 1)}
+          onClick={() => setPage(page - 1)}
           disabled={page === 1}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300"
         >
@@ -164,7 +119,7 @@ const allCount = allReservations.length;
         </span>
 
         <button
-          onClick={() => setPage((current) => current + 1)}
+          onClick={() => setPage(page + 1)}
           disabled={page === totalPages}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300"
         >
